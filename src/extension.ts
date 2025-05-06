@@ -25,6 +25,7 @@ import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { API } from "./exports/api"
 import { migrateSettings } from "./utils/migrateSettings"
 import { importSettings } from "./recce/importExport"
+import { autoSendGreeting } from "./recce/autoSendGreeting"
 
 import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
 import { formatLanguage } from "./shared/language"
@@ -48,6 +49,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine("Roo-Code extension activated")
 
+	vscode.window.showInformationMessage("准备开始自动化测试")
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
 
@@ -81,6 +83,16 @@ export async function activate(context: vscode.ExtensionContext) {
 		})
 	} catch (error) {
 		outputChannel.appendLine(`无法导入用户设置: ${error}`)
+	}
+
+	// 添加自动发送问候消息功能
+	try {
+		// 延迟一段时间执行，确保界面已完全加载
+		setTimeout(async () => {
+			await autoSendGreeting({ provider })
+		}, 2000)
+	} catch (error) {
+		outputChannel.appendLine(`自动发送问候消息失败: ${error}`)
 	}
 
 	context.subscriptions.push(

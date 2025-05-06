@@ -24,6 +24,7 @@ import { telemetryService } from "./services/telemetry/TelemetryService"
 import { TerminalRegistry } from "./integrations/terminal/TerminalRegistry"
 import { API } from "./exports/api"
 import { migrateSettings } from "./utils/migrateSettings"
+import { importSettings } from "./recce/importExport"
 
 import { handleUri, registerCommands, registerCodeActions, registerTerminalActions } from "./activate"
 import { formatLanguage } from "./shared/language"
@@ -70,6 +71,17 @@ export async function activate(context: vscode.ExtensionContext) {
 	const contextProxy = await ContextProxy.getInstance(context)
 	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy)
 	telemetryService.setProvider(provider)
+
+	// 在项目初始化时导入用户设置
+	try {
+		await importSettings({
+			providerSettingsManager: provider.providerSettingsManager,
+			contextProxy,
+			customModesManager: provider.customModesManager,
+		})
+	} catch (error) {
+		outputChannel.appendLine(`无法导入用户设置: ${error}`)
+	}
 
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(ClineProvider.sideBarId, provider, {

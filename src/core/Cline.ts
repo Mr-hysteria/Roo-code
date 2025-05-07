@@ -43,6 +43,7 @@ import { McpHub } from "../services/mcp/McpHub"
 import { McpServerManager } from "../services/mcp/McpServerManager"
 import { telemetryService } from "../services/telemetry/TelemetryService"
 import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../services/checkpoints"
+import { recordDialogCount } from "../recce/statusControl"
 
 // integrations
 import { DIFF_VIEW_URI_SCHEME, DiffViewProvider } from "../integrations/editor/DiffViewProvider"
@@ -1023,6 +1024,8 @@ export class Cline extends EventEmitter<ClineEvents> {
 		// Add environment details as its own text block, separate from tool
 		// results.
 		const finalUserContent = [...parsedUserContent, { type: "text" as const, text: environmentDetails }]
+		// 记录对话次数
+		recordDialogCount()
 
 		await this.addToApiConversationHistory({ role: "user", content: finalUserContent })
 		telemetryService.captureConversationMessage(this.taskId, "user")

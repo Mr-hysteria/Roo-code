@@ -50,6 +50,7 @@ import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
+import { initStats } from "../../recce/statusControl"
 
 /**
  * https://github.com/microsoft/vscode-webview-ui-toolkit-samples/blob/main/default/weather-webview/src/providers/WeatherViewProvider.ts
@@ -464,6 +465,9 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 			>
 		> = {},
 	) {
+		// 新任务开始时重置统计信息
+		initStats()
+
 		const {
 			apiConfiguration,
 			customModePrompts,

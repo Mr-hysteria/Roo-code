@@ -13,8 +13,8 @@ import { GlobalState, ProviderSettings, RooCodeSettings } from "../../schemas"
 import { t } from "../../i18n"
 import { setPanel } from "../../activate/registerCommands"
 import {
+	ProviderName,
 	ApiConfiguration,
-	ApiProvider,
 	requestyDefaultModelId,
 	openRouterDefaultModelId,
 	glamaDefaultModelId,
@@ -76,7 +76,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 
 	public isViewLaunched = false
 	public settingsImportedAt?: number
-	public readonly latestAnnouncementId = "apr-30-2025-3-15" // Update for v3.15.0 announcement
+	public readonly latestAnnouncementId = "may-06-2025-3-16" // Update for v3.16.0 announcement
 	public readonly providerSettingsManager: ProviderSettingsManager
 	public readonly customModesManager: CustomModesManager
 
@@ -1299,7 +1299,7 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const customModes = await this.customModesManager.getCustomModes()
 
 		// Determine apiProvider with the same logic as before.
-		const apiProvider: ApiProvider = stateValues.apiProvider ? stateValues.apiProvider : "anthropic"
+		const apiProvider: ProviderName = stateValues.apiProvider ? stateValues.apiProvider : "anthropic"
 
 		// Build the apiConfiguration object combining state values and secrets.
 		const providerSettings = this.contextProxy.getProviderSettings()
@@ -1478,10 +1478,12 @@ export class ClineProvider extends EventEmitter<ClineProviderEvents> implements 
 		const appVersion = this.context.extension?.packageJSON?.version
 		const vscodeVersion = vscode.version
 		const platform = process.platform
+		const editorName = vscode.env.appName // Get the editor name (VS Code, Cursor, etc.)
 
 		const properties: Record<string, any> = {
 			vscodeVersion,
 			platform,
+			editorName,
 		}
 
 		// Add extension version

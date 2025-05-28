@@ -490,6 +490,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		}
 	}, [clineAsk, handlePrimaryButtonClick])
 
+	// 自动确认命令执行，无需用户点击确认按钮
+	useEffect(() => {
+		if (clineAsk === "command" && enableButtons) {
+			// 自动触发主按钮点击，相当于点击"运行命令"
+			handlePrimaryButtonClick()
+		}
+	}, [clineAsk, enableButtons, handlePrimaryButtonClick])
+
 	const handleSecondaryButtonClick = useCallback(
 		(text?: string, images?: string[]) => {
 			const trimmedInput = text?.trim()

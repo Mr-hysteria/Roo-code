@@ -1,0 +1,12 @@
+{
+	"mcpServers": {
+		"mcp-server-recce": {
+			"disabled": false,
+			"timeout": 60,
+			"command": "npx",
+			"args": ["-y", "--registry=http://r.npm.sankuai.com/", "@mtfe/mcp-server-recce@latest"],
+			"transportType": "stdio",
+			"alwaysAllow": ["recce_error_library", "get_recce_rui_templates", "get_recce_knowledge"]
+		}
+	}
+}

@@ -45,6 +45,7 @@ import { McpServerManager } from "../services/mcp/McpServerManager"
 import { telemetryService } from "../services/telemetry/TelemetryService"
 import { CheckpointServiceOptions, RepoPerTaskCheckpointService } from "../services/checkpoints"
 import { recordDialogCount } from "../recce/statusControl"
+import { exportTask } from "../recce/exportTask"
 
 // integrations
 import { DIFF_VIEW_URI_SCHEME, DiffViewProvider } from "../integrations/editor/DiffViewProvider"
@@ -323,6 +324,15 @@ export class Cline extends EventEmitter<ClineEvents> {
 				taskId: this.taskId,
 				globalStoragePath: this.globalStoragePath,
 			})
+			// export task
+			try {
+				const provider = this.providerRef.deref()
+				if (provider) {
+					await exportTask(this.taskId, undefined, provider)
+				}
+			} catch (error) {
+				console.error("导出对话历史失败:", error)
+			}
 		} catch (error) {
 			// In the off chance this fails, we don't want to stop the task.
 			console.error("Failed to save API conversation history:", error)
@@ -340,6 +350,17 @@ export class Cline extends EventEmitter<ClineEvents> {
 		await this.providerRef.deref()?.postStateToWebview()
 		this.emit("message", { action: "created", message })
 		await this.saveClineMessages()
+		// 只在非部分消息时导出对话历史
+		if (!message.partial) {
+			try {
+				const provider = this.providerRef.deref()
+				if (provider) {
+					await exportTask(this.taskId, undefined, provider)
+				}
+			} catch (error) {
+				console.error("导出对话历史失败:", error)
+			}
+		}
 	}
 
 	public async overwriteClineMessages(newMessages: ClineMessage[]) {
@@ -1810,12 +1831,17 @@ export class Cline extends EventEmitter<ClineEvents> {
 						"error",
 						`Error ${action}:\n${error.message ?? JSON.stringify(serializeError(error), null, 2)}`,
 					)
-					// this.toolResults.push({
-					// 	type: "tool_result",
-					// 	tool_use_id: toolUseId,
-					// 	content: await this.formatToolError(errorString),
-					// })
 					pushToolResult(formatResponse.toolError(errorString))
+
+					// 在发生错误时导出对话历史
+					try {
+						const provider = this.providerRef.deref()
+						if (provider) {
+							await exportTask(this.taskId, undefined, provider)
+						}
+					} catch (exportError) {
+						console.error("导出对话历史失败:", exportError)
+					}
 				}
 
 				// If block is partial, remove partial closing tag so its not presented to user

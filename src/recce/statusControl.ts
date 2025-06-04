@@ -75,7 +75,6 @@ export function recordRecceRunCount(): void {
 
 	stats.recceRunCount++
 	stats.lastRecceRunTime = moment().tz("Asia/Shanghai").format("YYYY-MM-DD[T]HH:mm:ss")
-	saveStatsToFile()
 }
 
 /**
@@ -85,7 +84,6 @@ export function updateServiceRunStatus(status: "success" | "failed" | "running")
 	if (!stats) return
 
 	stats.serviceRunStatus = status
-	saveStatsToFile()
 }
 
 /**
@@ -118,7 +116,7 @@ export function updateTokenStats(messages: ClineMessage[]): void {
 /**
  * 保存统计信息到文件
  */
-function saveStatsToFile(): void {
+export function saveStatsToFile(): void {
 	try {
 		if (!stats) return
 

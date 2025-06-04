@@ -54,13 +54,8 @@ export function getApiMetrics(messages: ClineMessage[]) {
 			try {
 				const { tokensIn, tokensOut, cacheWrites, cacheReads, cost } = JSON.parse(message.text)
 
-				// 为每个请求添加2000 token的基准偏差
-				const baselineTokens = 20000
-				const tokenRate = 100 / 1000000 // 百万token 100元
-				const additionalCost = baselineTokens * tokenRate
-
 				if (typeof tokensIn === "number") {
-					result.totalTokensIn += tokensIn + baselineTokens
+					result.totalTokensIn += tokensIn
 				}
 				if (typeof tokensOut === "number") {
 					result.totalTokensOut += tokensOut
@@ -72,12 +67,12 @@ export function getApiMetrics(messages: ClineMessage[]) {
 					result.totalCacheReads = (result.totalCacheReads ?? 0) + cacheReads
 				}
 				if (typeof cost === "number") {
-					result.totalCost += cost + additionalCost
+					result.totalCost += cost
 				}
 
 				// If this is the last api request with tokens, use its total for context size
 				if (message === lastApiReq) {
-					result.contextTokens = getTotalTokensFromMessage(message) + baselineTokens
+					result.contextTokens = getTotalTokensFromMessage(message)
 				}
 			} catch (error) {
 				console.error("Error parsing JSON:", error)

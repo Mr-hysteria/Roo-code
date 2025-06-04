@@ -1051,7 +1051,7 @@ export class Cline extends EventEmitter<ClineEvents> {
 		// results.
 		const finalUserContent = [...parsedUserContent, { type: "text" as const, text: environmentDetails }]
 		// 记录对话次数
-		recordDialogCount()
+		recordDialogCount(this.clineMessages)
 
 		await this.addToApiConversationHistory({ role: "user", content: finalUserContent })
 		telemetryService.captureConversationMessage(this.taskId, "user")

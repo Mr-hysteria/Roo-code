@@ -2,6 +2,11 @@ import * as vscode from "vscode"
 import * as fs from "fs"
 import * as path from "path"
 import moment from "moment-timezone"
+import { getApiMetrics } from "../shared/getApiMetrics"
+import { ClineMessage } from "../shared/ExtensionMessage"
+import { TokenUsage } from "../schemas"
+
+// export let inputPrice = 0
 
 interface StatInfo {
 	dialogCount: number
@@ -10,6 +15,7 @@ interface StatInfo {
 	lastRecceRunTime: string
 	workspacePath: string
 	serviceRunStatus?: "success" | "failed" | "running" | undefined
+	tokenStats: TokenUsage
 }
 
 // 全局统计信息
@@ -30,10 +36,8 @@ function ensureLogsDir(workspacePath: string): string {
  * 初始化统计信息
  */
 export function initStats(): void {
-	// 获取工作区路径
 	const workspacePath = vscode.workspace.workspaceFolders?.[0].uri.fsPath || ""
 
-	// 初始化统计对象
 	stats = {
 		dialogCount: 0,
 		recceRunCount: 0,
@@ -41,19 +45,25 @@ export function initStats(): void {
 		lastRecceRunTime: "",
 		workspacePath,
 		serviceRunStatus: "running",
+		tokenStats: {
+			totalTokensIn: 0,
+			totalTokensOut: 0,
+			totalCost: 0,
+			contextTokens: 0,
+		},
 	}
 
-	// 确保日志目录存在并更新统计文件
 	saveStatsToFile()
 }
 
 /**
  * 记录对话请求
  */
-export function recordDialogCount(): void {
+export function recordDialogCount(messages: ClineMessage[]): void {
 	if (!stats) return
 
 	stats.dialogCount++
+	updateTokenStats(messages)
 	saveStatsToFile()
 }
 
@@ -90,17 +100,31 @@ function getRunDurationSeconds(): number {
 }
 
 /**
+ * 更新Token统计
+ */
+export function updateTokenStats(messages: ClineMessage[]): void {
+	if (!stats) return
+
+	const tokenUsage: TokenUsage = getApiMetrics(messages)
+
+	// 累加Token统计数据
+	stats.tokenStats.totalTokensIn = tokenUsage.totalTokensIn
+	stats.tokenStats.totalTokensOut = tokenUsage.totalTokensOut
+	stats.tokenStats.totalCost = tokenUsage.totalCost
+	// contextTokens使用最新值，因为它代表当前上下文大小
+	stats.tokenStats.contextTokens = tokenUsage.contextTokens
+}
+
+/**
  * 保存统计信息到文件
  */
 function saveStatsToFile(): void {
 	try {
 		if (!stats) return
 
-		// 确保目录存在
 		const logsDir = ensureLogsDir(stats.workspacePath)
 		const filePath = path.join(logsDir, "run-stats.json")
 
-		// 准备统计数据
 		const statsData = {
 			basicStats: {
 				dialogCount: stats.dialogCount,
@@ -109,10 +133,15 @@ function saveStatsToFile(): void {
 				lastRecceRunTime: stats.lastRecceRunTime || "",
 				totalRunTimeSeconds: getRunDurationSeconds(),
 				serviceRunStatus: stats.serviceRunStatus,
+				tokenStats: {
+					totalTokensIn: stats.tokenStats.totalTokensIn,
+					totalTokensOut: stats.tokenStats.totalTokensOut,
+					totalCost: stats.tokenStats.totalCost,
+					contextTokens: stats.tokenStats.contextTokens,
+				},
 			},
 		}
 
-		// 写入文件
 		fs.writeFileSync(filePath, JSON.stringify(statsData, null, 2), "utf-8")
 	} catch (error) {
 		console.error("保存统计信息失败:", error)

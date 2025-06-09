@@ -26,9 +26,9 @@ export function monitorCommand(command: string, output: string): boolean {
 		// 记录错误信息到MD文件
 		errorToMarkdown(command, output)
 
+		recordRecceRunCount()
 		// 更新服务运行状态为失败
 		updateServiceRunStatus("failed")
-		recordRecceRunCount()
 		return false
 	}
 
@@ -37,8 +37,8 @@ export function monitorCommand(command: string, output: string): boolean {
 
 	// 如果服务成功启动
 	if (isSuccess) {
-		updateServiceRunStatus("success")
 		recordRecceRunCount()
+		updateServiceRunStatus("success")
 		// 显示服务成功启动的通知
 		vscode.window.showInformationMessage(`服务已成功启动，run-stats 已更新`)
 		return true

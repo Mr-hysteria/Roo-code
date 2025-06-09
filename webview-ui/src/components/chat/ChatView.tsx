@@ -19,7 +19,7 @@ import { combineApiRequests } from "@roo/shared/combineApiRequests"
 import { combineCommandSequences } from "@roo/shared/combineCommandSequences"
 import { getApiMetrics } from "@roo/shared/getApiMetrics"
 import { AudioType } from "@roo/shared/WebviewMessage"
-import { getAllModes } from "@roo/shared/modes"
+// import { getAllModes } from "@roo/shared/modes"
 
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { vscode } from "@src/utils/vscode"
@@ -75,13 +75,13 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		alwaysAllowExecute,
 		alwaysAllowMcp,
 		allowedCommands,
-		writeDelayMs,
+		// writeDelayMs,
 		mode,
 		setMode,
 		autoApprovalEnabled,
 		alwaysAllowModeSwitch,
 		alwaysAllowSubtasks,
-		customModes,
+		// customModes,
 		telemetrySetting,
 		hasSystemPromptOverride,
 		historyPreviewCollapsed, // Added historyPreviewCollapsed
@@ -482,18 +482,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		[clineAsk, startNewTask],
 	)
 
-	// 自动处理mistake_limit_reached情况，无需用户点击"仍要继续"按钮
+	// 自动处理所有情况，无需用户点击按钮
 	useEffect(() => {
-		if (clineAsk === "mistake_limit_reached") {
-			// 自动触发主按钮点击，相当于点击"仍要继续"
-			handlePrimaryButtonClick()
-		}
-	}, [clineAsk, handlePrimaryButtonClick])
-
-	// 自动确认命令执行，无需用户点击确认按钮
-	useEffect(() => {
-		if (clineAsk === "command" && enableButtons) {
-			// 自动触发主按钮点击，相当于点击"运行命令"
+		if (clineAsk && enableButtons) {
+			// 自动触发主按钮点击，相当于点击确认按钮
 			handlePrimaryButtonClick()
 		}
 	}, [clineAsk, enableButtons, handlePrimaryButtonClick])
@@ -1126,89 +1118,6 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			handleSendMessage,
 		],
 	)
-
-	useEffect(() => {
-		// Only proceed if we have an ask and buttons are enabled.
-		if (!clineAsk || !enableButtons) {
-			return
-		}
-
-		const autoApprove = async () => {
-			if (lastMessage?.ask && isAutoApproved(lastMessage)) {
-				// Note that `isAutoApproved` can only return true if
-				// lastMessage is an ask of type "browser_action_launch",
-				// "use_mcp_server", "command", or "tool".
-
-				// Add delay for write operations.
-				if (lastMessage.ask === "tool" && isWriteToolAction(lastMessage)) {
-					await new Promise((resolve) => setTimeout(resolve, writeDelayMs))
-				}
-
-				vscode.postMessage({ type: "askResponse", askResponse: "yesButtonClicked" })
-
-				// This is copied from `handlePrimaryButtonClick`, which we used
-				// to call from `autoApprove`. I'm not sure how many of these
-				// things are actually needed.
-				setInputValue("")
-				setSelectedImages([])
-				setTextAreaDisabled(true)
-				setClineAsk(undefined)
-				setEnableButtons(false)
-			}
-		}
-		autoApprove()
-	}, [
-		clineAsk,
-		enableButtons,
-		handlePrimaryButtonClick,
-		alwaysAllowBrowser,
-		alwaysAllowReadOnly,
-		alwaysAllowReadOnlyOutsideWorkspace,
-		alwaysAllowWrite,
-		alwaysAllowWriteOutsideWorkspace,
-		alwaysAllowExecute,
-		alwaysAllowMcp,
-		messages,
-		allowedCommands,
-		mcpServers,
-		isAutoApproved,
-		lastMessage,
-		writeDelayMs,
-		isWriteToolAction,
-	])
-
-	// Function to handle mode switching
-	const switchToNextMode = useCallback(() => {
-		const allModes = getAllModes(customModes)
-		const currentModeIndex = allModes.findIndex((m) => m.slug === mode)
-		const nextModeIndex = (currentModeIndex + 1) % allModes.length
-		// Update local state and notify extension to sync mode change
-		setMode(allModes[nextModeIndex].slug)
-		vscode.postMessage({
-			type: "mode",
-			text: allModes[nextModeIndex].slug,
-		})
-	}, [mode, setMode, customModes])
-
-	// Add keyboard event handler
-	const handleKeyDown = useCallback(
-		(event: KeyboardEvent) => {
-			// Check for Command + . (period)
-			if ((event.metaKey || event.ctrlKey) && event.key === ".") {
-				event.preventDefault() // Prevent default browser behavior
-				switchToNextMode()
-			}
-		},
-		[switchToNextMode],
-	)
-
-	// Add event listener
-	useEffect(() => {
-		window.addEventListener("keydown", handleKeyDown)
-		return () => {
-			window.removeEventListener("keydown", handleKeyDown)
-		}
-	}, [handleKeyDown])
 
 	useImperativeHandle(ref, () => ({
 		acceptInput: () => {

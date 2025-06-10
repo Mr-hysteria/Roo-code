@@ -14,6 +14,7 @@ import {
 import { formatResponse } from "../prompts/responses"
 import { telemetryService } from "../../services/telemetry/TelemetryService"
 import { type ExecuteCommandOptions, executeCommand } from "./executeCommandTool"
+import { recordDialogCount, updateServiceRunStatus } from "../../recce/statusControl"
 
 export async function attemptCompletionTool(
 	cline: Cline,
@@ -47,6 +48,8 @@ export async function attemptCompletionTool(
 
 					telemetryService.captureTaskCompleted(cline.taskId)
 					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage(), cline.getToolUsage())
+					recordDialogCount(cline.clineMessages)
+					updateServiceRunStatus("completed")
 
 					await cline.ask("command", removeClosingTag("command", command), block.partial).catch(() => {})
 				}
@@ -73,6 +76,8 @@ export async function attemptCompletionTool(
 					await cline.say("completion_result", result, undefined, false)
 					telemetryService.captureTaskCompleted(cline.taskId)
 					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage(), cline.getToolUsage())
+					recordDialogCount(cline.clineMessages)
+					updateServiceRunStatus("completed")
 				}
 
 				// Complete command message.
@@ -98,6 +103,8 @@ export async function attemptCompletionTool(
 				await cline.say("completion_result", result, undefined, false)
 				telemetryService.captureTaskCompleted(cline.taskId)
 				cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage(), cline.getToolUsage())
+				recordDialogCount(cline.clineMessages)
+				updateServiceRunStatus("completed")
 			}
 
 			if (cline.parentTask) {

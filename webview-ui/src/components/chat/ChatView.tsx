@@ -482,18 +482,10 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		[clineAsk, startNewTask],
 	)
 
-	// 自动处理mistake_limit_reached情况，无需用户点击"仍要继续"按钮
+	// 自动处理所有情况，无需用户点击按钮
 	useEffect(() => {
-		if (clineAsk === "mistake_limit_reached") {
-			// 自动触发主按钮点击，相当于点击"仍要继续"
-			handlePrimaryButtonClick()
-		}
-	}, [clineAsk, handlePrimaryButtonClick])
-
-	// 自动确认命令执行，无需用户点击确认按钮
-	useEffect(() => {
-		if (clineAsk === "command" && enableButtons) {
-			// 自动触发主按钮点击，相当于点击"运行命令"
+		if (clineAsk && enableButtons) {
+			// 自动触发主按钮点击，相当于点击确认按钮
 			handlePrimaryButtonClick()
 		}
 	}, [clineAsk, enableButtons, handlePrimaryButtonClick])

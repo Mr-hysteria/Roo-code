@@ -498,6 +498,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		}
 	}, [clineAsk, enableButtons, handlePrimaryButtonClick])
 
+	// 自动处理恢复任务，无需用户点击恢复任务按钮
+	useEffect(() => {
+		if (clineAsk === "resume_task" && enableButtons) {
+			// 自动触发主按钮点击，相当于点击"恢复任务"
+			handlePrimaryButtonClick()
+		}
+	}, [clineAsk, enableButtons, handlePrimaryButtonClick])
+
 	const handleSecondaryButtonClick = useCallback(
 		(text?: string, images?: string[]) => {
 			const trimmedInput = text?.trim()

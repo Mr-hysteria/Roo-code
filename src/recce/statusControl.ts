@@ -14,7 +14,7 @@ interface StatInfo {
 	startTime: string
 	lastRecceRunTime: string
 	workspacePath: string
-	serviceRunStatus?: "success" | "failed" | "running" | undefined
+	serviceRunStatus?: "success" | "failed" | "running" | "completed" | undefined
 	tokenStats: TokenUsage
 }
 
@@ -80,10 +80,11 @@ export function recordRecceRunCount(): void {
 /**
  * 更新服务运行状态
  */
-export function updateServiceRunStatus(status: "success" | "failed" | "running"): void {
+export function updateServiceRunStatus(status: "success" | "failed" | "running" | "completed"): void {
 	if (!stats) return
 
 	stats.serviceRunStatus = status
+	saveStatsToFile()
 }
 
 /**
@@ -104,7 +105,6 @@ export function updateTokenStats(messages: ClineMessage[]): void {
 	if (!stats) return
 
 	const tokenUsage: TokenUsage = getApiMetrics(messages)
-
 	// 累加Token统计数据
 	stats.tokenStats.totalTokensIn = tokenUsage.totalTokensIn
 	stats.tokenStats.totalTokensOut = tokenUsage.totalTokensOut

@@ -2,7 +2,7 @@ import * as vscode from "vscode"
 import * as fs from "fs"
 import * as path from "path"
 import moment from "moment-timezone"
-import { updateServiceRunStatus, recordRecceRunCount, saveStatsToFile } from "./statusControl"
+import { updateServiceRunStatus, recordRecceRunCount } from "./statusControl"
 
 /**
  * 监控指定命令的执行情况，对于成功和失败情况进行处理
@@ -29,7 +29,6 @@ export function monitorCommand(command: string, output: string): boolean {
 		recordRecceRunCount()
 		// 更新服务运行状态为失败
 		updateServiceRunStatus("failed")
-		saveStatsToFile()
 		return false
 	}
 
@@ -40,7 +39,6 @@ export function monitorCommand(command: string, output: string): boolean {
 	if (isSuccess) {
 		recordRecceRunCount()
 		updateServiceRunStatus("success")
-		saveStatsToFile()
 		// 显示服务成功启动的通知
 		vscode.window.showInformationMessage(`服务已成功启动，run-stats 已更新`)
 		return true

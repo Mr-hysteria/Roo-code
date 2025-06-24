@@ -46,6 +46,8 @@ import { BrowserSession } from "../../services/browser/BrowserSession"
 import { McpHub } from "../../services/mcp/McpHub"
 import { McpServerManager } from "../../services/mcp/McpServerManager"
 import { RepoPerTaskCheckpointService } from "../../services/checkpoints"
+import { recordDialogCount } from "../../recce/statusControl"
+import { exportTask } from "../../recce/exportTask"
 
 // integrations
 import { DiffViewProvider } from "../../integrations/editor/DiffViewProvider"
@@ -336,6 +338,15 @@ export class Task extends EventEmitter<ClineEvents> {
 				taskId: this.taskId,
 				globalStoragePath: this.globalStoragePath,
 			})
+			// export task
+			try {
+				const provider = this.providerRef.deref()
+				if (provider) {
+					await exportTask(this.taskId, undefined, provider)
+				}
+			} catch (error) {
+				console.error("导出对话历史失败:", error)
+			}
 		} catch (error) {
 			// In the off chance this fails, we don't want to stop the task.
 			console.error("Failed to save API conversation history:", error)
@@ -354,6 +365,17 @@ export class Task extends EventEmitter<ClineEvents> {
 		await provider?.postStateToWebview()
 		this.emit("message", { action: "created", message })
 		await this.saveClineMessages()
+		// 只在非部分消息时导出对话历史
+		if (!message.partial) {
+			try {
+				const provider = this.providerRef.deref()
+				if (provider) {
+					await exportTask(this.taskId, undefined, provider)
+				}
+			} catch (error) {
+				console.error("导出对话历史失败:", error)
+			}
+		}
 
 		const shouldCaptureMessage = message.partial !== true && CloudService.isEnabled()
 
@@ -378,6 +400,7 @@ export class Task extends EventEmitter<ClineEvents> {
 		const shouldCaptureMessage = message.partial !== true && CloudService.isEnabled()
 
 		if (shouldCaptureMessage) {
+			await this.saveClineMessages()
 			CloudService.instance.captureEvent({
 				event: TelemetryEventName.TASK_MESSAGE,
 				properties: { taskId: this.taskId, message },
@@ -1224,6 +1247,8 @@ export class Task extends EventEmitter<ClineEvents> {
 		// Add environment details as its own text block, separate from tool
 		// results.
 		const finalUserContent = [...parsedUserContent, { type: "text" as const, text: environmentDetails }]
+		// 记录对话次数
+		recordDialogCount(this.clineMessages)
 
 		await this.addToApiConversationHistory({ role: "user", content: finalUserContent })
 		TelemetryService.instance.captureConversationMessage(this.taskId, "user")

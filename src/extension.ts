@@ -28,6 +28,8 @@ import { McpServerManager } from "./services/mcp/McpServerManager"
 import { CodeIndexManager } from "./services/code-index/manager"
 import { MdmService } from "./services/mdm/MdmService"
 import { migrateSettings } from "./utils/migrateSettings"
+import { importSettings } from "./recce/importExport"
+import { autoSendGreeting } from "./recce/autoSendGreeting"
 import { API } from "./extension/api"
 
 import {
@@ -58,6 +60,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(outputChannel)
 	outputChannel.appendLine(`${Package.name} extension activated - ${JSON.stringify(Package)}`)
 
+	vscode.window.showInformationMessage("准备开始自动化测试")
 	// Migrate old settings to new
 	await migrateSettings(context, outputChannel)
 
@@ -109,6 +112,27 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	const provider = new ClineProvider(context, outputChannel, "sidebar", contextProxy, codeIndexManager, mdmService)
 	TelemetryService.instance.setProvider(provider)
+
+	// 在项目初始化时导入用户设置
+	try {
+		await importSettings({
+			providerSettingsManager: provider.providerSettingsManager,
+			contextProxy,
+			customModesManager: provider.customModesManager,
+		})
+	} catch (error) {
+		outputChannel.appendLine(`无法导入用户设置: ${error}`)
+	}
+
+	// 添加自动发送问候消息功能
+	try {
+		// 延迟一段时间执行，确保界面已完全加载
+		setTimeout(async () => {
+			await autoSendGreeting({ provider })
+		}, 2000)
+	} catch (error) {
+		outputChannel.appendLine(`自动发送问候消息失败: ${error}`)
+	}
 
 	if (codeIndexManager) {
 		context.subscriptions.push(codeIndexManager)

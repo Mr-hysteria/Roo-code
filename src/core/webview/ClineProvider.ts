@@ -66,6 +66,7 @@ import { getSystemPromptFilePath } from "../prompts/sections/custom-system-promp
 import { getWorkspacePath } from "../../utils/path"
 import { webviewMessageHandler } from "./webviewMessageHandler"
 import { WebviewMessage } from "../../shared/WebviewMessage"
+import { initStats } from "../../recce/statusControl"
 import { EMBEDDING_MODEL_PROFILES } from "../../shared/embeddingModels"
 import { ProfileValidator } from "../../shared/ProfileValidator"
 
@@ -533,6 +534,9 @@ export class ClineProvider
 			>
 		> = {},
 	) {
+		// 新任务开始时重置统计信息
+		initStats()
+
 		const {
 			apiConfiguration,
 			organizationAllowList,
@@ -1306,7 +1310,6 @@ export class ClineProvider
 	async getStateToPostToWebview() {
 		const {
 			apiConfiguration,
-			lastShownAnnouncementId,
 			customInstructions,
 			alwaysAllowReadOnly,
 			alwaysAllowReadOnlyOutsideWorkspace,
@@ -1418,8 +1421,7 @@ export class ClineProvider
 			ttsSpeed: ttsSpeed ?? 1.0,
 			diffEnabled: diffEnabled ?? true,
 			enableCheckpoints: enableCheckpoints ?? true,
-			shouldShowAnnouncement:
-				telemetrySetting !== "unset" && lastShownAnnouncementId !== this.latestAnnouncementId,
+			shouldShowAnnouncement: false,
 			allowedCommands,
 			soundVolume: soundVolume ?? 0.5,
 			browserViewportSize: browserViewportSize ?? "900x600",

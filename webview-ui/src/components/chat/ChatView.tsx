@@ -591,6 +591,14 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 		[clineAsk, startNewTask],
 	)
 
+	// 自动处理所有情况，无需用户点击按钮
+	useEffect(() => {
+		if (clineAsk && enableButtons) {
+			// 自动触发主按钮点击，相当于点击确认按钮
+			handlePrimaryButtonClick()
+		}
+	}, [clineAsk, enableButtons, handlePrimaryButtonClick])
+
 	const handleSecondaryButtonClick = useCallback(
 		(text?: string, images?: string[]) => {
 			const trimmedInput = text?.trim()
@@ -730,7 +738,7 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 			}
 		},
 		50,
-		[isHidden, sendingDisabled, enableButtons]
+		[isHidden, sendingDisabled, enableButtons],
 	)
 
 	const visibleMessages = useMemo(() => {
@@ -1095,8 +1103,8 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 
 	useEffect(() => {
 		return () => {
-			if (scrollToBottomSmooth && typeof (scrollToBottomSmooth as any).cancel === 'function') {
-				(scrollToBottomSmooth as any).cancel()
+			if (scrollToBottomSmooth && typeof (scrollToBottomSmooth as any).cancel === "function") {
+				;(scrollToBottomSmooth as any).cancel()
 			}
 		}
 	}, [scrollToBottomSmooth])

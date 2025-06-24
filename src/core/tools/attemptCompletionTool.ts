@@ -14,6 +14,7 @@ import {
 	AskFinishSubTaskApproval,
 } from "../../shared/tools"
 import { formatResponse } from "../prompts/responses"
+import { recordDialogCount, updateServiceRunStatus } from "../../recce/statusControl"
 
 export async function attemptCompletionTool(
 	cline: Task,
@@ -47,6 +48,8 @@ export async function attemptCompletionTool(
 
 					TelemetryService.instance.captureTaskCompleted(cline.taskId)
 					cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage(), cline.toolUsage)
+					recordDialogCount(cline.clineMessages)
+					updateServiceRunStatus("completed")
 
 					await cline.ask("command", removeClosingTag("command", command), block.partial).catch(() => {})
 				}
@@ -70,6 +73,8 @@ export async function attemptCompletionTool(
 			await cline.say("completion_result", result, undefined, false)
 			TelemetryService.instance.captureTaskCompleted(cline.taskId)
 			cline.emit("taskCompleted", cline.taskId, cline.getTokenUsage(), cline.toolUsage)
+			recordDialogCount(cline.clineMessages)
+			updateServiceRunStatus("completed")
 
 			if (cline.parentTask) {
 				const didApprove = await askFinishSubTaskApproval()

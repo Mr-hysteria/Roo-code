@@ -13,7 +13,7 @@ import { inspect } from "util"
 import type { ExitCodeDetails } from "./types"
 import { BaseTerminalProcess } from "./BaseTerminalProcess"
 import { Terminal } from "./Terminal"
-
+import { debouncedMonitorCommand } from "../../recce/terminalMonitor"
 export class TerminalProcess extends BaseTerminalProcess {
 	private terminalRef: WeakRef<Terminal>
 
@@ -203,6 +203,8 @@ export class TerminalProcess extends BaseTerminalProcess {
 			}
 
 			this.startHotTimer(data)
+			// 用防抖函数调用monitorCommand
+			debouncedMonitorCommand(command, this.fullOutput)
 		}
 
 		// Set streamClosed immediately after stream ends.

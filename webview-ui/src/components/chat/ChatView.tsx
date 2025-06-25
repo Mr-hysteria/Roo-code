@@ -594,6 +594,12 @@ const ChatViewComponent: React.ForwardRefRenderFunction<ChatViewRef, ChatViewPro
 	// 自动处理所有情况，无需用户点击按钮
 	useEffect(() => {
 		if (clineAsk && enableButtons) {
+			// Exceptions for auto-clicking, per user request.
+			// Do not auto-click "proceedWhileRunning" (强制继续)
+			// Do not auto-click "startNewTask" (开始新任务)
+			if (clineAsk === "command_output" || clineAsk === "completion_result") {
+				return
+			}
 			// 自动触发主按钮点击，相当于点击确认按钮
 			handlePrimaryButtonClick()
 		}

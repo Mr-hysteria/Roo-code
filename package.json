@@ -405,7 +405,7 @@
 		"pretty-bytes": "^6.1.1",
 		"ps-tree": "^1.2.0",
 		"puppeteer-chromium-resolver": "^23.0.0",
-		"puppeteer-core": "^23.4.0",
+		"puppeteer-core": "^24.12.1",
 		"reconnecting-eventsource": "^1.6.4",
 		"say": "^0.16.0",
 		"serialize-error": "^11.0.3",
